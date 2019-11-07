@@ -1,0 +1,376 @@
+Index: app/src/main/res/layout/activity_seoultoilet.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_seoultoilet.xml	(date 1564620189433)
++++ app/src/main/res/layout/activity_seoultoilet.xml	(date 1564620189433)
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout
++        xmlns:android="http://schemas.android.com/apk/res/android"
++        xmlns:tools="http://schemas.android.com/tools"
++        xmlns:app="http://schemas.android.com/apk/res-auto"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        tools:context=".seoultoilet">
++
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: testandriod/app/src/main/res/layout/list_item.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- testandriod/app/src/main/res/layout/list_item.xml	(date 1569494662081)
++++ testandriod/app/src/main/res/layout/list_item.xml	(date 1569494662081)
+@@ -0,0 +1,25 @@
++<?xml version="1.0" encoding="utf-8"?>
++<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    android:layout_width="fill_parent"
++    android:layout_height="wrap_content"
++    android:orientation="horizontal"
++    android:padding="10dp"
++    android:paddingLeft="10dp"
++    android:paddingRight="10dp" >
++
++    <TextView
++        android:id="@+id/name"
++        android:layout_width="0dp"
++        android:layout_weight="0.5"
++        android:layout_height="wrap_content"
++        android:textStyle="bold"/>
++
++
++    <TextView
++        android:id="@+id/phone"
++        android:layout_width="0dp"
++        android:layout_weight="0.5"
++        android:layout_height="wrap_content"
++        android:textStyle="bold" />
++
++</LinearLayout>
+\ No newline at end of file
+Index: app/src/main/java/kr/hs/emirim/mirimhee/punchpower/ResultActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/kr/hs/emirim/mirimhee/punchpower/ResultActivity.kt	(date 1564548677044)
++++ app/src/main/java/kr/hs/emirim/mirimhee/punchpower/ResultActivity.kt	(date 1564548677044)
+@@ -0,0 +1,12 @@
++package kr.hs.emirim.mirimhee.punchpower
++
++import androidx.appcompat.app.AppCompatActivity
++import android.os.Bundle
++
++class ResultActivity : AppCompatActivity() {
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_result)
++    }
++}
+Index: app/src/main/java/kr/hs/emirim/mirimhee/punchpower/MainActivity.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/kr/hs/emirim/mirimhee/punchpower/MainActivity.kt	(date 1564618273763)
++++ app/src/main/java/kr/hs/emirim/mirimhee/punchpower/MainActivity.kt	(date 1564618273763)
+@@ -0,0 +1,89 @@
++package kr.hs.emirim.areum.punchpower
++
++import android.content.Context
++import android.content.Intent
++import android.hardware.*
++import androidx.appcompat.app.AppCompatActivity
++import android.os.Bundle
++import android.util.Log
++import kotlinx.android.synthetic.main.activity_main.*
++import kr.hs.emirim.mirimhee.punchpower.R
++import kr.hs.emirim.mirimhee.punchpower.ResultActivity
++import java.lang.Exception
++
++class MainActivity : AppCompatActivity() {
++
++    var maxPower = 0.0
++    var isStart = false
++    var startTime = 0L
++
++    val sensorManager:SensorManager by lazy{
++        getSystemService(Context.SENSOR_SERVICE) as SensorManager
++    }
++
++    val eventListener: SensorEventListener = object :SensorEventListener{
++        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
++        }
++
++        override fun onSensorChanged(event: SensorEvent?) {
++            event?.let{
++                if(event.sensor.type != Sensor.TYPE_LINEAR_ACCELERATION) return@let
++
++                val power = Math.pow(event.values[0].toDouble(),2.0)+Math.pow(event.values[1].toDouble(),2.0)+Math.pow(event.values[2].toDouble(),2.0)
++
++                if(power >20 && !isStart){
++                    startTime = System.currentTimeMillis()
++                    isStart = true
++                }
++
++                if(isStart){
++                    if(maxPower < power) maxPower = power
++                    stateLabel.text = "펀치력을 측정하고 있습니다."
++
++                    if(System.currentTimeMillis() - startTime > 3000){
++                        isStart = false
++                        punchPowerTestComplete(maxPower)
++                    }
++                }
++            }
++        }
++    }
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_main)
++    }
++
++    override fun onStart(){
++        super.onStart()
++        initGame()
++    }
++
++    fun initGame(){
++        maxPower = 0.0
++        isStart = false
++        startTime = 0L
++        stateLabel.text = "핸드폰을 손에쥐고 주먹을 내지르세요"
++
++        sensorManager.registerListener(
++            eventListener,
++            sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION),
++            SensorManager.SENSOR_DELAY_NORMAL
++        )
++    }
++
++    fun punchPowerTestComplete(power: Double){
++    Log.d("MainActivity","측정완료: power: ${String.format("%.5f",power)}")
++    sensorManager.unregisterListener(eventListener)
++    val intent = Intent(this@MainActivity, ResultActivity::class.java)
++    intent.putExtra("power",power)
++    startActivity(intent)
++}
++
++override fun onStop(){
++    super.onStop()
++    try{
++        sensorManager.unregisterListener(eventListener)
++    }catch(e:Exception){}
++}
++}
+\ No newline at end of file
+Index: app/src/main/java/kr/hs/emirim/mirimhee/punchpower/seoultoilet.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/kr/hs/emirim/mirimhee/punchpower/seoultoilet.kt	(date 1564620187423)
++++ app/src/main/java/kr/hs/emirim/mirimhee/punchpower/seoultoilet.kt	(date 1564620187423)
+@@ -0,0 +1,12 @@
++package kr.hs.emirim.mirimhee.punchpower
++
++import androidx.appcompat.app.AppCompatActivity
++import android.os.Bundle
++
++class seoultoilet : AppCompatActivity() {
++
++    override fun onCreate(savedInstanceState: Bundle?) {
++        super.onCreate(savedInstanceState)
++        setContentView(R.layout.activity_seoultoilet)
++    }
++}
+Index: MY_BLUE/app/src/main/res/menu/bottom_nav_menu.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- MY_BLUE/app/src/main/res/menu/bottom_nav_menu.xml	(date 1573120077283)
++++ MY_BLUE/app/src/main/res/menu/bottom_nav_menu.xml	(date 1573120077283)
+@@ -0,0 +1,19 @@
++<?xml version="1.0" encoding="utf-8"?>
++<menu xmlns:android="http://schemas.android.com/apk/res/android">
++
++    <item
++        android:id="@+id/navigation_home"
++        android:icon="@drawable/ic_home_black_24dp"
++        android:title="@string/title_home" />
++
++    <item
++        android:id="@+id/navigation_dashboard"
++        android:icon="@drawable/ic_dashboard_black_24dp"
++        android:title="@string/title_dashboard" />
++
++    <item
++        android:id="@+id/navigation_notifications"
++        android:icon="@drawable/ic_notifications_black_24dp"
++        android:title="@string/title_notifications" />
++
++</menu>
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/vcs.xml	(date 1564546352606)
++++ .idea/vcs.xml	(date 1564546352606)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+Index: app/src/main/res/layout/activity_result.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_result.xml	(date 1564549695482)
++++ app/src/main/res/layout/activity_result.xml	(date 1564549695482)
+@@ -0,0 +1,43 @@
++<?xml version="1.0" encoding="utf-8"?>
++<androidx.constraintlayout.widget.ConstraintLayout
++        xmlns:android="http://schemas.android.com/apk/res/android"
++        xmlns:tools="http://schemas.android.com/tools"
++        xmlns:app="http://schemas.android.com/apk/res-auto"
++        android:layout_width="match_parent"
++        android:layout_height="match_parent"
++        tools:context=".ResultActivity">
++
++    <TextView
++            android:text="999 점"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:id="@+id/scoreLabel" app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
++            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp" android:layout_marginTop="8dp"
++            app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
++            app:layout_constraintBottom_toBottomOf="parent" android:textSize="48sp"
++            app:layout_constraintVertical_bias="0.47"/>
++    <TextView
++            android:text="당신의 펀치력은"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content" android:id="@+id/textView3"
++            app:layout_constraintEnd_toEndOf="parent"
++            android:layout_marginEnd="8dp" app:layout_constraintStart_toStartOf="parent"
++            android:layout_marginStart="8dp" android:layout_marginTop="8dp" app:layout_constraintTop_toTopOf="parent"
++            android:textSize="24sp" android:layout_marginBottom="32dp"
++            app:layout_constraintBottom_toTopOf="@+id/scoreLabel" app:layout_constraintHorizontal_bias="0.497"
++            app:layout_constraintVertical_bias="1.0"/>
++    <Button
++            android:text="랭킹보기"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content" android:id="@+id/rankingButton"
++            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
++            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp" android:layout_marginBottom="8dp"
++            app:layout_constraintBottom_toBottomOf="parent"/>
++    <Button
++            android:text="다시하기"
++            android:layout_width="0dp"
++            android:layout_height="wrap_content"
++            android:id="@+id/restartButton" android:layout_marginBottom="8dp"
++            app:layout_constraintBottom_toTopOf="@+id/rankingButton" app:layout_constraintStart_toStartOf="parent"
++            android:layout_marginStart="8dp" app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"/>
++</androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
+Index: .idea/render.experimental.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- .idea/render.experimental.xml	(date 1564549695853)
++++ .idea/render.experimental.xml	(date 1564549695853)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="RenderSettings">
++    <option name="showDecorations" value="true" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git app/src/main/res/drawable/boxing.png app/src/main/res/drawable/boxing.png
+new file mode 100644
+index 0000000000000000000000000000000000000000..ac4732858908da77a8b92f1af59028075220971a
+GIT binary patch
+literal 3620
+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
+UrBA*VA#Zd5qidp5q2&<uADX^%vj6}9
+
